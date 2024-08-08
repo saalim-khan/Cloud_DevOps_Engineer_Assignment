@@ -36,6 +36,7 @@ jobs:
         IMAGE_TAG: ${{ github.sha }}
       run: |
         docker build -t notes_app:${{ github.sha }} .
+        docker tag notes_app:${{ github.sha }} 891376966913.dkr.ecr.us-east-1.amazonaws.com/notes_app:${{ github.sha }}
         docker push 891376966913.dkr.ecr.us-east-1.amazonaws.com/notes_app:${{ github.sha }}
 
     # - name: Fill in the new image ID in the Amazon ECS task definition
