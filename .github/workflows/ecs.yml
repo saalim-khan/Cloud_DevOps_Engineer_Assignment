@@ -34,10 +34,11 @@ jobs:
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         ECR_REPOSITORY: notes-app
-        IMAGE_TAG: test_ml_image
+        IMAGE_TAG: latest
       run: |
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        docker build -t notes_app .
+        docker tag notes_app:latest 891376966913.dkr.ecr.us-east-1.amazonaws.com/notes_app:latest
+        docker push 891376966913.dkr.ecr.us-east-1.amazonaws.com/notes_app:latest
 
     # - name: Deploy to ECS
     #   env:
