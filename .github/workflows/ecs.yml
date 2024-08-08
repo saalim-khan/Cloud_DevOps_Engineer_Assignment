@@ -44,7 +44,7 @@ jobs:
       id: task-def
       uses: aws-actions/amazon-ecs-render-task-definition@v1
       with:
-          task-definition: notes-app_task-definition 
+          task-definition: notes-app_task_defination:1
           container-name: notes_app
           image: ${{ steps.build-image.outputs.image }}    
     - name: Deploy Amazon ECS task definition
