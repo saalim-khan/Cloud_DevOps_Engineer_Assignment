@@ -1,0 +1,55 @@
+name: Deploy to AWS ECS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Log in to Amazon ECR
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Build and push Docker image
+      env:
+        AWS_REGION: ${{ secrets.AWS_REGION }}
+        ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+        AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+      run: |
+        docker build --build-arg BUILDKIT_INLINE_CACHE=1 --tag $ECR_REPOSITORY:latest -f Dockerfile .
+        docker tag $ECR_REPOSITORY:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:latest
+        docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:latest
+
+    - name: Deploy to ECS
+      env:
+        AWS_REGION: ${{ secrets.AWS_REGION }}
+        CLUSTER_NAME: ${{ secrets.ECS_CLUSTER_NAME }}
+        SERVICE_NAME: ${{ secrets.ECS_SERVICE_NAME }}
+        TASK_DEFINITION: ${{ secrets.ECS_TASK_DEFINITION }}
+      run: |
+        aws ecs update-service --cluster $CLUSTER_NAME --service $SERVICE_NAME --force-new-deployment --region $AWS_REGION
+
+    - name: Run Integration Tests
+      env:
+        TEST_URL: ${{ secrets.TEST_URL }}
+      run: |
+        curl --fail $TEST_URL || exit 1
+
+    - name: Rollback on failure
+      if: failure()
+      env:
+        AWS_REGION: ${{ secrets.AWS_REGION }}
+        CLUSTER_NAME: ${{ secrets.ECS_CLUSTER_NAME }}
+        SERVICE_NAME: ${{ secrets.ECS_SERVICE_NAME }}
+        TASK_DEFINITION: ${{ secrets.ECS_TASK_DEFINITION }}
+      run: |
+        aws ecs update-service --cluster $CLUSTER_NAME --service $SERVICE_NAME --task-definition $TASK_DEFINITION --region $AWS_REGION
