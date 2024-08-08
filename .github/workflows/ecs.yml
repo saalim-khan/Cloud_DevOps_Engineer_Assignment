@@ -34,26 +34,25 @@ jobs:
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         ECR_REPOSITORY: notes-app
-        IMAGE_TAG: latest
+        IMAGE_TAG: $(git describe --tags --abbrev=0 | awk -F '[-,]' '{print $1".$2"}')
       run: |
-        docker build -t notes_app .
-        docker tag notes_app:latest 891376966913.dkr.ecr.us-east-1.amazonaws.com/notes_app:latest
-        docker push 891376966913.dkr.ecr.us-east-1.amazonaws.com/notes_app:latest
+        docker build -t notes_app:$(git describe --tags --abbrev=0 | awk -F '[-,]' '{print $1".$2"}') .
+        docker push 891376966913.dkr.ecr.us-east-1.amazonaws.com/notes_app:$(git describe --tags --abbrev=0 | awk -F '[-,]' '{print $1".$2"}')
 
-    - name: Fill in the new image ID in the Amazon ECS task definition
-      id: task-def
-      uses: aws-actions/amazon-ecs-render-task-definition@v1
-      with:
-          task-definition: notes-app_task_defination:1
-          container-name: notes_app
-          image: ${{ steps.build-image.outputs.image }}    
-    - name: Deploy Amazon ECS task definition
-      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-      with:
-          task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: notes_app_service
-          cluster: cloud_assignment
-          wait-for-service-stability: true  
+    # - name: Fill in the new image ID in the Amazon ECS task definition
+    #   id: task-def
+    #   uses: aws-actions/amazon-ecs-render-task-definition@v1
+    #   with:
+    #       task-definition: notes-app_task_defination:1
+    #       container-name: notes_app
+    #       image: ${{ steps.build-image.outputs.image }}    
+    # - name: Deploy Amazon ECS task definition
+    #   uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+    #   with:
+    #       task-definition: ${{ steps.task-def.outputs.task-definition }}
+    #       service: notes_app_service
+    #       cluster: cloud_assignment
+    #       wait-for-service-stability: true  
 
     # - name: Deploy to ECS
     #   env:
