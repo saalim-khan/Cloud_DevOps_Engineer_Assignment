@@ -33,7 +33,7 @@ jobs:
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         ECR_REPOSITORY: notes-app
-        IMAGE_TAG: $(git describe --tags --abbrev=0 | awk -F '[-,]' '{print $1".$2"}')
+        IMAGE_TAG: latest
       run: |
         docker build -t notes_app:$(git describe --tags --abbrev=0 | awk -F '[-,]' '{print $1".$2"}') .
         docker push 891376966913.dkr.ecr.us-east-1.amazonaws.com/notes_app:$(git describe --tags --abbrev=0 | awk -F '[-,]' '{print $1".$2"}')
